@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TF2 Mercenary ID // Classified Dossier Generator</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        tf2: {
+                            red: '#BA383B',
+                            redDark: '#8A2629',
+                            redBg: '#2D1A1A',
+                            blu: '#5B7A8C',
+                            bluDark: '#3A5260',
+                            bluBg: '#18242D',
+                            mvm: '#738A7C',
+                            paper: '#EFE3C3',
+                            paperDark: '#D8C7A0',
+                            ink: '#2B2522',
+                            stampRed: '#B22222',
+                            folderBorder: '#C2B28B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- html2canvas for PNG Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Google Fonts TF2 Aesthetic (Oswald, Special Elite typewriter, Alfa Slab, Courier Prime) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;700&family=Special+Elite&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* TF2 Dossier Aesthetics */
+        body {
+            background-color: #12100e;
+            background-image: radial-gradient(#26221d 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #e2e8f0;
+            font-family: 'Oswald', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1c1815;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ba383b;
+            border-radius: 4px;
+        }
+
+        /* Clean paper background compatible with html2canvas */
+        .paper-texture {
+            background-color: #efe3c3;
+        }
+
+        /* Typewriter font helpers */
+        .font-typewriter {
+            font-family: 'Special Elite', 'Courier Prime', monospace;
+        }
+        .font-tf2-build {
+            font-family: 'Alfa Slab One', 'Oswald', sans-serif;
+        }
+        .font-oswald {
+            font-family: 'Oswald', sans-serif;
+        }
+
+        /* Stamp rotated effect */
+        .stamp-top-secret {
+            border: 4px double #b22222;
+            color: #b22222;
+            font-family: 'Alfa Slab One', cursive;
+            text-transform: uppercase;
+            transform: rotate(-8deg);
+            display: inline-block;
+            letter-spacing: 2px;
+            opacity: 0.85;
+        }
+
+        .stamp-blu-secret {
+            border: 4px double #3a5260;
+            color: #3a5260;
+            font-family: 'Alfa Slab One', cursive;
+            text-transform: uppercase;
+            transform: rotate(-8deg);
+            display: inline-block;
+            letter-spacing: 2px;
+            opacity: 0.85;
+        }
+
+        /* Tape effect without box-shadow to prevent html2canvas artifacts */
+        .tape-corner {
+            background: rgba(245, 238, 215, 0.85);
+            border: 1px solid rgba(180, 170, 140, 0.6);
+        }
+
+        /* Draggable Sticker Interactive */
+        .sticker-interactive {
+            touch-action: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="bg-[#1c1815] border-b-4 border-[#ba383b] px-4 py-3 sticky top-0 z-40 shadow-2xl" id="main-header">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-[#ba383b] rounded flex items-center justify-center font-bold text-xl text-white shadow-lg border border-yellow-600/30" id="header-logo-bg">
+                    <i class="fa-solid fa-crosshairs text-amber-200"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wider uppercase text-amber-100 font-tf2-build flex items-center gap-2">
+                        MANN CO. <span class="text-xs bg-amber-600/30 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-mono">CLASSIFIED DOSSIER</span>
+                    </h1>
+                    <p class="text-xs text-amber-200/60 font-typewriter">Generador de Ficha de Mercenario de Team Fortress 2</p>
+                </div>
+            </div>
+
+            <!-- Header Quick Actions -->
+            <div class="flex items-center gap-3">
+                <!-- Team Switcher Buttons -->
+                <div class="bg-black/40 p-1 rounded border border-neutral-700 flex gap-1 text-xs font-bold font-oswald">
+                    <button id="team-red-btn" class="px-3 py-1 rounded bg-[#ba383b] text-white flex items-center gap-1 shadow">
+                        <span class="w-2 h-2 rounded-full bg-red-200"></span> RED
+                    </button>
+                    <button id="team-blu-btn" class="px-3 py-1 rounded text-gray-400 hover:text-white transition flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span> BLU
+                    </button>
+                    <button id="team-mvm-btn" class="px-3 py-1 rounded text-gray-400 hover:text-white transition flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-teal-400"></span> MvM
+                    </button>
+                </div>
+
+                <button id="reset-btn" class="px-3 py-1.5 text-xs font-semibold bg-neutral-800 hover:bg-neutral-700 text-gray-300 rounded border border-neutral-700 transition flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+
+                <button id="download-btn" class="px-5 py-2 text-sm font-bold bg-amber-600 hover:bg-amber-500 text-black rounded shadow-lg transition transform active:scale-95 flex items-center gap-2 font-oswald uppercase tracking-wider">
+                    <i class="fa-solid fa-file-arrow-down text-base"></i> Descargar Expediente PNG
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- LEFT COLUMN: CONTROLS PANEL (5 COLS) -->
+        <section class="lg:col-span-5 bg-[#1a1714] rounded-xl border border-neutral-800 p-4 shadow-2xl flex flex-col gap-4">
+            
+            <!-- TABS NAVIGATION -->
+            <div class="grid grid-cols-4 gap-1 p-1 bg-black/60 rounded-lg text-xs font-bold border border-neutral-800 font-oswald" id="tab-nav">
+                <button data-tab="tab-info" class="tab-btn active py-2 text-center rounded text-amber-400 bg-neutral-800 shadow transition flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-address-card text-sm"></i> Expediente
+                </button>
+                <button data-tab="tab-classes" class="tab-btn py-2 text-center rounded text-gray-400 hover:text-gray-200 transition flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-users-gear text-sm"></i> Clases
+                </button>
+                <button data-tab="tab-sticker" class="tab-btn py-2 text-center rounded text-gray-400 hover:text-gray-200 transition flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-note-sticky text-sm"></i> Sticker
+                </button>
+                <button data-tab="tab-style" class="tab-btn py-2 text-center rounded text-gray-400 hover:text-gray-200 transition flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-sliders text-sm"></i> Estilo
+                </button>
+            </div>
+
+            <!-- TAB CONTENTS -->
+            <div class="space-y-4 max-h-[calc(100vh-210px)] overflow-y-auto pr-1">
+
+                <!-- TAB 1: MERCENARY INFO -->
+                <div id="tab-info" class="tab-content space-y-4">
+                    <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest border-b border-neutral-800 pb-1 font-oswald">
+                        <i class="fa-solid fa-user-secret mr-1"></i> Datos del Mercenario
+                    </h3>
+
+                    <!-- Mercenary Name (GamerTag) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Nombre de Mercenario / GamerTag</label>
+                        <input type="text" id="input-gamertag" value="SAXTON_Lover69" class="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                    </div>
+
+                    <!-- Avatar / Profile Picture Upload -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Fotografía del Sujeto (Avatar)</label>
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded border-2 border-amber-600/60 bg-neutral-900 shrink-0 overflow-hidden">
+                                <img id="preview-avatar-thumb" src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=120&auto=format&fit=crop&q=80" class="w-full h-full object-cover">
+                            </div>
+                            <input type="file" id="input-avatar-file" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-neutral-800 file:text-amber-400 hover:file:bg-neutral-700 cursor-pointer">
+                            <button id="remove-avatar-btn" class="text-xs text-red-400 hover:text-red-300 px-2.5 py-1.5 bg-neutral-800 rounded border border-neutral-700 shrink-0">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Country and Flag Selector -->
+                    <div class="grid grid-cols-12 gap-2">
+                        <div class="col-span-8">
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">País de Origen</label>
+                            <input type="text" id="input-country" value="México" class="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                        </div>
+                        <div class="col-span-4">
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Bandera (Emoji)</label>
+                            <input type="text" id="input-flag" value="🇲🇽" class="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-center text-lg text-white focus:outline-none focus:border-amber-500 transition">
+                        </div>
+                    </div>
+
+                    <!-- Quick Country Selector List -->
+                    <div>
+                        <span class="text-[11px] text-gray-400 block mb-1">Selección rápida de país:</span>
+                        <div class="flex flex-wrap gap-1.5" id="quick-country-list">
+                            <!-- Appended by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Hours Played / Rank Title -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Horas en TF2</label>
+                            <input type="text" id="input-hours" value="1,850 hrs" class="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 mb-1">Sombrero / Cosmético Fav.</label>
+                            <input type="text" id="input-hat" value="Burning Flames Team Captain" class="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                        </div>
+                    </div>
+
+                    <!-- Favorite Weapons / Loadout Notes -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Equipamiento Favorito (Armas)</label>
+                        <input type="text" id="input-loadout" value="Australium Rocket Launcher, Gunboats, Market Gardener" class="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                    </div>
+
+                    <!-- Mercenary Bio / Dossier Quote -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Notas del Expediente / Cita del Jugador</label>
+                        <textarea id="input-quote" rows="3" class="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition font-typewriter" placeholder="Notas clasificadas de Mann Co...">"Si la violencia no resolvió tu problema, es porque no usaste suficiente violencia."</textarea>
+                    </div>
+                </div>
+
+                <!-- TAB 2: CLASSES (MAIN, SECONDARY, TERTIARY & NEMESIS) -->
+                <div id="tab-classes" class="tab-content space-y-4 hidden">
+                    <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest border-b border-neutral-800 pb-1 font-oswald">
+                        <i class="fa-solid fa-users-gear mr-1"></i> Especializaciones de Clase
+                    </h3>
+
+                    <!-- CLASS SLOT 1: MAIN -->
+                    <div class="p-3 bg-neutral-900/90 border border-amber-600/40 rounded-lg space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-amber-400 font-oswald uppercase">🥇 1. Clase Main (Principal)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] text-gray-400 block mb-1">Clase</label>
+                                <select id="select-main-class" class="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-xs text-white">
+                                    <option value="Soldier" selected>Soldier</option>
+                                    <option value="Scout">Scout</option>
+                                    <option value="Pyro">Pyro</option>
+                                    <option value="Demoman">Demoman</option>
+                                    <option value="Heavy">Heavy Weapons Guy</option>
+                                    <option value="Engineer">Engineer</option>
+                                    <option value="Medic">Medic</option>
+                                    <option value="Sniper">Sniper</option>
+                                    <option value="Spy">Spy</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-400 block mb-1">Título / Apodo</label>
+                                <input type="text" id="input-main-sub" value="Rocket Jumper God" class="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-xs text-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CLASS SLOT 2: SECONDARY -->
+                    <div class="p-3 bg-neutral-900/90 border border-neutral-700 rounded-lg space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-gray-300 font-oswald uppercase">🥈 2. Clase Secundaria</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] text-gray-400 block mb-1">Clase</label>
+                                <select id="select-sec-class" class="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-xs text-white">
+                                    <option value="Demoman" selected>Demoman</option>
+                                    <option value="Scout">Scout</option>
+                                    <option value="Soldier">Soldier</option>
+                                    <option value="Pyro">Pyro</option>
+                                    <option value="Heavy">Heavy</option>
+                                    <option value="Engineer">Engineer</option>
+                                    <option value="Medic">Medic</option>
+                                    <option value="Sniper">Sniper</option>
+                                    <option value="Spy">Spy</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-400 block mb-1">Título / Apodo</label>
+                                <input type="text" id="input-sec-sub" value="Pipe Master" class="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-xs text-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CLASS SLOT 3: TERTIARY (OPTIONAL) -->
+                    <div class="p-3 bg-neutral-900/90 border border-neutral-700 rounded-lg space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-gray-400 font-oswald uppercase">🥉 3. Clase Terciaria (Opcional)</span>
+                            <label class="flex items-center gap-1 cursor-pointer">
+                                <input type="checkbox" id="toggle-tertiary" checked class="accent-amber-500">
+                                <span class="text-[10px] text-gray-300">Mostrar en tarjeta</span>
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2" id="tertiary-controls">
+                            <div>
+                                <label class="text-[10px] text-gray-400 block mb-1">Clase</label>
+                                <select id="select-ter-class" class="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-xs text-white">
+                                    <option value="Medic" selected>Medic</option>
+                                    <option value="Scout">Scout</option>
+                                    <option value="Soldier">Soldier</option>
+                                    <option value="Pyro">Pyro</option>
+                                    <option value="Demoman">Demoman</option>
+                                    <option value="Heavy">Heavy</option>
+                                    <option value="Engineer">Engineer</option>
+                                    <option value="Sniper">Sniper</option>
+                                    <option value="Spy">Spy</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-400 block mb-1">Título / Apodo</label>
+                                <input type="text" id="input-ter-sub" value="Kritzkrieg Pop" class="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-xs text-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CLASS SLOT 4: NEMESIS / HATED CLASS -->
+                    <div class="p-3 bg-red-950/40 border border-red-700/60 rounded-lg space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-red-400 font-oswald uppercase flex items-center gap-1">
+                                <i class="fa-solid fa-skull-crossbones"></i> NÉMESIS / CLASE MÁS ODIADA
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] text-red-300 block mb-1">Clase Odiada</label>
+                                <select id="select-hate-class" class="w-full bg-neutral-900 border border-red-800 rounded px-2 py-1.5 text-xs text-white">
+                                    <option value="Sniper" selected>Sniper (Sightlines)</option>
+                                    <option value="Pyro">Pyro (Airblast/W+M1)</option>
+                                    <option value="Spy">Spy (Trickstabs)</option>
+                                    <option value="Scout">Scout (Scunt)</option>
+                                    <option value="Engineer">Engineer (Mini-Sentries)</option>
+                                    <option value="Medic">Medic (Uber push)</option>
+                                    <option value="Heavy">Heavy (Natascha)</option>
+                                    <option value="Demoman">Demoman (Sticky spam)</option>
+                                    <option value="Soldier">Soldier (Random crits)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-red-300 block mb-1">Razón de Odio</label>
+                                <input type="text" id="input-hate-reason" value="Headshots a través de todo el mapa" class="w-full bg-neutral-900 border border-red-800 rounded px-2 py-1.5 text-xs text-white">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: STICKER / CUSTOM PHOTO -->
+                <div id="tab-sticker" class="tab-content space-y-4 hidden">
+                    <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest border-b border-neutral-800 pb-1 font-oswald">
+                        <i class="fa-solid fa-stamp mr-1"></i> Sticker o Sello Personalizado
+                    </h3>
+
+                    <!-- Image File Input -->
+                    <div class="border-2 border-dashed border-neutral-700 hover:border-amber-500 rounded-lg p-4 text-center cursor-pointer transition bg-neutral-900/50" id="drop-zone">
+                        <input type="file" id="sticker-file-input" accept="image/*" class="hidden">
+                        <i class="fa-solid fa-file-image text-2xl text-amber-500 mb-1 block"></i>
+                        <span class="text-xs text-gray-300 font-semibold block">Arrastra una imagen o sticker aquí</span>
+                        <span class="text-[10px] text-gray-500">Formatos PNG transparente, JPG o WebP</span>
+                    </div>
+
+                    <div id="sticker-controls" class="space-y-3 bg-neutral-900/80 p-3 rounded-lg border border-neutral-800">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-gray-300">Controles del Sticker</span>
+                            <button id="remove-sticker-btn" class="text-[11px] text-red-400 hover:text-red-300 transition">
+                                <i class="fa-solid fa-trash"></i> Quitar Sticker
+                            </button>
+                        </div>
+
+                        <!-- Scale Slider -->
+                        <div>
+                            <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>Escala / Tamaño</span>
+                                <span id="val-scale">100%</span>
+                            </div>
+                            <input type="range" id="slider-scale" min="20" max="250" value="100" class="w-full accent-amber-500">
+                        </div>
+
+                        <!-- Rotation Slider -->
+                        <div>
+                            <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>Rotación</span>
+                                <span id="val-rotate">0°</span>
+                            </div>
+                            <input type="range" id="slider-rotate" min="-180" max="180" value="0" class="w-full accent-amber-500">
+                        </div>
+
+                        <!-- Opacity Slider -->
+                        <div>
+                            <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>Opacidad</span>
+                                <span id="val-opacity">100%</span>
+                            </div>
+                            <input type="range" id="slider-opacity" min="10" max="100" value="100" class="w-full accent-amber-500">
+                        </div>
+
+                        <!-- Position Slider X / Y -->
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <div>
+                                <label class="text-[11px] text-gray-400 block mb-1">Posición X</label>
+                                <input type="range" id="slider-posx" min="0" max="100" value="82" class="w-full accent-amber-500">
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-gray-400 block mb-1">Posición Y</label>
+                                <input type="range" id="slider-posy" min="0" max="100" value="30" class="w-full accent-amber-500">
+                            </div>
+                        </div>
+
+                        <p class="text-[10px] text-amber-300/70 italic text-center mt-1 font-typewriter">
+                            💡 Tip: También puedes arrastrar el sticker directamente sobre el expediente.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- TAB 4: DOSSIER STYLE & CUSTOMIZATION -->
+                <div id="tab-style" class="tab-content space-y-4 hidden">
+                    <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest border-b border-neutral-800 pb-1 font-oswald">
+                        <i class="fa-solid fa-palette mr-1"></i> Personalización de Expediente
+                    </h3>
+
+                    <!-- Team Preset Quick Switcher -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1.5">Equipo TF2</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button id="style-preset-red" class="p-2 bg-[#ba383b] text-white font-bold text-xs rounded shadow border border-red-400/30 flex items-center justify-center gap-1">
+                                RED TEAM
+                            </button>
+                            <button id="style-preset-blu" class="p-2 bg-[#5b7a8c] text-white font-bold text-xs rounded shadow border border-blue-400/30 flex items-center justify-center gap-1">
+                                BLU TEAM
+                            </button>
+                            <button id="style-preset-mvm" class="p-2 bg-[#4b6154] text-white font-bold text-xs rounded shadow border border-teal-400/30 flex items-center justify-center gap-1">
+                                MvM ROBOT
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Folder Color & Texture Options -->
+                    <div class="space-y-2 pt-2 border-t border-neutral-800">
+                        <span class="text-xs font-semibold text-gray-300 block">Tono de Papel de Expediente</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button id="paper-theme-classic" class="p-2 bg-[#efe3c3] text-[#2b2522] font-bold text-[11px] rounded border border-neutral-400">
+                                Clasificado Manila
+                            </button>
+                            <button id="paper-theme-aged" class="p-2 bg-[#d6c29a] text-[#2b2522] font-bold text-[11px] rounded border border-neutral-400">
+                                Papel Envejecido
+                            </button>
+                            <button id="paper-theme-dark" class="p-2 bg-[#2d2824] text-[#efe3c3] font-bold text-[11px] rounded border border-neutral-600">
+                                Archivo Nocturno
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Classified Stamp Controls -->
+                    <div class="space-y-2 pt-2 border-t border-neutral-800">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-300">Mostrar Sello "TOP SECRET"</span>
+                            <input type="checkbox" id="toggle-stamp" checked class="w-4 h-4 accent-amber-500 cursor-pointer">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-300">Mostrar Clips y Cinta Adhesiva</span>
+                            <input type="checkbox" id="toggle-clips" checked class="w-4 h-4 accent-amber-500 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <!-- Font Type Selector -->
+                    <div class="pt-2 border-t border-neutral-800">
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Tipografía de Título</label>
+                        <select id="select-font" class="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-white font-oswald">
+                            <option value="font-tf2-build" selected>TF2 Heavy Build (Alfa / Oswald)</option>
+                            <option value="font-typewriter">Typewriter Secret (Special Elite)</option>
+                            <option value="font-oswald">Clean Oswald Grotesque</option>
+                        </select>
+                    </div>
+
+                    <!-- Font Sizes -->
+                    <div class="space-y-2 pt-2 border-t border-neutral-800">
+                        <div>
+                            <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>Tamaño Nombre Mercenario</span>
+                                <span id="val-title-size">100%</span>
+                            </div>
+                            <input type="range" id="slider-title-size" min="70" max="140" value="100" class="w-full accent-amber-500">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: TF2 DOSSIER PREVIEW & CANVAS (7 COLS) -->
+        <section class="lg:col-span-7 flex flex-col items-center sticky top-20">
+            
+            <!-- PREVIEW TOOLBAR -->
+            <div class="w-full bg-[#1c1815] border-x border-t border-neutral-800 rounded-t-xl px-4 py-2 flex justify-between items-center text-xs text-gray-400 font-typewriter">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span>EXPEDIENTE CLASIFICADO DE MERCENARIO</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-neutral-800 px-2 py-0.5 rounded text-amber-200">1280 x 720 px</span>
+                </div>
+            </div>
+
+            <!-- CARD CANVAS WRAPPER -->
+            <div class="w-full bg-black/90 border border-neutral-800 rounded-b-xl p-2 md:p-6 flex items-center justify-center overflow-hidden min-h-[420px] relative">
+                
+                <!-- SCALE HOLDER -->
+                <div id="card-scale-holder" class="w-full flex justify-center items-center">
+                    
+                    <!-- THE ACTUAL TF2 MERCENARY DOSSIER CARD (1280 x 720 px) -->
+                    <div id="player-card" class="relative w-[1280px] h-[720px] shrink-0 overflow-hidden transition-all duration-300 border-4 rounded-sm select-none paper-texture" style="border-color: #8A2629; background-color: #efe3c3; color: #2b2522;">
+                        
+                        <!-- DECORATIVE PAPERCLIPS & TAPE -->
+                        <div id="card-tape-1" class="absolute -top-3 left-10 w-24 h-8 tape-corner transform -rotate-6 z-30 pointer-events-none"></div>
+                        <div id="card-tape-2" class="absolute -bottom-2 right-12 w-28 h-8 tape-corner transform rotate-3 z-30 pointer-events-none"></div>
+
+                        <!-- MANN CO / TOP SECRET STAMP -->
+                        <div id="card-stamp" class="absolute top-6 right-8 z-30 pointer-events-none">
+                            <div class="stamp-top-secret px-4 py-1 text-2xl font-black tracking-widest uppercase">
+                                TOP SECRET // CLASSIFIED
+                            </div>
+                        </div>
+
+                        <!-- MANN CO LOGO WATERMARK IN BACKGROUND -->
+                        <div class="absolute bottom-4 right-6 pointer-events-none z-0">
+                            <svg class="w-80 h-80" viewBox="0 0 100 100" fill="rgba(40,35,30,0.05)">
+                                <path d="M50 5 A45 45 0 1 0 50 95 A45 45 0 1 0 50 15 Z M50 15 A35 35 0 1 1 50 85 A35 35 0 1 1 50 15 Z" />
+                                <rect x="42" y="10" width="16" height="80" />
+                                <rect x="10" y="42" width="80" height="16" />
+                            </svg>
+                        </div>
+
+                        <!-- TOP HEADER BAR: MERCENARY IDENTITY -->
+                        <div class="relative z-20 px-10 pt-7 pb-3 flex justify-between items-end border-b-2 border-neutral-900/20">
+                            <div class="flex items-center gap-6">
+                                
+                                <!-- MERCENARY PHOTO / AVATAR (STAPLED ON PAPER) -->
+                                <div class="relative shrink-0">
+                                    <div class="w-24 h-24 bg-neutral-900 p-1 rounded border-2 border-neutral-700 transform -rotate-2 relative">
+                                        <!-- Paperclip -->
+                                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-neutral-500 z-30 text-lg">
+                                            <i class="fa-solid fa-paperclip"></i>
+                                        </div>
+                                        <img id="card-avatar-img" src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80" class="w-full h-full object-cover">
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col justify-center py-1">
+                                    <!-- Team Badge & Country Flag -->
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <span id="card-team-badge" class="px-3 py-0.5 bg-[#ba383b] text-white font-black text-xs tracking-widest uppercase rounded-sm font-oswald">
+                                            RED TEAM MERCENARY
+                                        </span>
+                                        
+                                        <!-- Country & Flag -->
+                                        <div class="flex items-center gap-1.5 px-2.5 py-0.5 bg-neutral-900/10 border border-neutral-900/20 rounded font-typewriter text-xs font-bold text-neutral-800">
+                                            <span id="card-flag-display" class="text-base">🇲🇽</span>
+                                            <span id="card-country-display" class="uppercase">MÉXICO</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- MERCENARY NAME (GAMERTAG) -->
+                                    <h1 id="card-gamertag-display" class="font-black tracking-wider uppercase text-neutral-900 font-tf2-build leading-none my-1" style="font-size: 2.2rem;">
+                                        SAXTON_Lover69
+                                    </h1>
+                                    
+                                    <!-- Hours & Hat Info -->
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-typewriter text-neutral-800 mt-1 font-bold">
+                                        <span class="whitespace-nowrap"><i class="fa-solid fa-clock text-amber-900 mr-1"></i> HORAS JUGADAS: <strong id="card-hours-display" class="text-neutral-900">1,850 hrs</strong></span>
+                                        <span class="text-neutral-500">&bull;</span>
+                                        <span class="whitespace-nowrap"><i class="fa-solid fa-hat-cowboy text-amber-900 mr-1"></i> HAT: <strong id="card-hat-display" class="text-neutral-900">Burning Flames Team Captain</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- MANN CO DOSSIER NUMBER -->
+                            <div class="text-right font-typewriter text-neutral-600 text-xs font-bold hidden md:block">
+                                <div>MANN CO. DOSSIER FILE</div>
+                                <div class="text-sm font-mono text-neutral-900">#TF2-MERC-99214</div>
+                            </div>
+                        </div>
+
+                        <!-- CARD BODY CONTENT -->
+                        <div class="relative z-20 p-8 grid grid-cols-12 gap-6 h-[calc(100%-140px)]">
+                            
+                            <!-- LEFT COLUMN: CLASS SPECIALIZATIONS (5 COLS) -->
+                            <div class="col-span-5 flex flex-col justify-between">
+                                <div>
+                                    <div class="text-xs font-black uppercase tracking-widest text-neutral-800 border-b border-neutral-900/30 pb-1 mb-3 font-oswald flex items-center justify-between">
+                                        <span><i class="fa-solid fa-users"></i> ESPECIALIZACIONES DE CLASE</span>
+                                        <span class="text-[10px] text-neutral-600 font-typewriter">SLOTS 1-3</span>
+                                    </div>
+
+                                    <!-- CLASS CARDS CONTAINER -->
+                                    <div class="space-y-2.5">
+                                        
+                                        <!-- MAIN CLASS -->
+                                        <div class="p-3 bg-neutral-900/10 border-2 border-neutral-900/30 rounded flex items-center justify-between relative">
+                                            <div class="flex items-center gap-3">
+                                                <div id="card-main-icon" class="w-10 h-10 rounded-full bg-[#ba383b] text-white flex items-center justify-center font-bold text-lg shrink-0 p-1 border border-amber-200/30">
+                                                </div>
+                                                <div>
+                                                    <div class="text-[10px] font-bold text-amber-800 font-typewriter uppercase">🥇 CLASE MAIN</div>
+                                                    <div id="card-main-title" class="text-lg font-black text-neutral-900 font-tf2-build uppercase leading-tight">SOLDIER</div>
+                                                </div>
+                                            </div>
+                                            <span id="card-main-sub" class="text-xs font-typewriter font-bold bg-neutral-900/10 px-2 py-1 rounded text-neutral-800">Rocket Jumper</span>
+                                        </div>
+
+                                        <!-- SECONDARY CLASS -->
+                                        <div class="p-3 bg-neutral-900/10 border-2 border-neutral-900/20 rounded flex items-center justify-between relative">
+                                            <div class="flex items-center gap-3">
+                                                <div id="card-sec-icon" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center font-bold text-lg shrink-0 p-1 border border-amber-200/20">
+                                                </div>
+                                                <div>
+                                                    <div class="text-[10px] font-bold text-neutral-600 font-typewriter uppercase">🥈 CLASE SECUNDARIA</div>
+                                                    <div id="card-sec-title" class="text-lg font-black text-neutral-900 font-tf2-build uppercase leading-tight">DEMOMAN</div>
+                                                </div>
+                                            </div>
+                                            <span id="card-sec-sub" class="text-xs font-typewriter font-bold bg-neutral-900/10 px-2 py-1 rounded text-neutral-800">Pipe Master</span>
+                                        </div>
+
+                                        <!-- TERTIARY CLASS (OPTIONAL) -->
+                                        <div id="card-ter-container" class="p-3 bg-neutral-900/10 border-2 border-neutral-900/20 rounded flex items-center justify-between relative">
+                                            <div class="flex items-center gap-3">
+                                                <div id="card-ter-icon" class="w-10 h-10 rounded-full bg-neutral-700 text-white flex items-center justify-center font-bold text-lg shrink-0 p-1 border border-amber-200/20">
+                                                </div>
+                                                <div>
+                                                    <div class="text-[10px] font-bold text-neutral-600 font-typewriter uppercase">🥉 CLASE TERCIARIA</div>
+                                                    <div id="card-ter-title" class="text-lg font-black text-neutral-900 font-tf2-build uppercase leading-tight">MEDIC</div>
+                                                </div>
+                                            </div>
+                                            <span id="card-ter-sub" class="text-xs font-typewriter font-bold bg-neutral-900/10 px-2 py-1 rounded text-neutral-800">Kritzkrieg Pop</span>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <!-- NEMESIS / HATED CLASS BOX -->
+                                <div class="mt-3 p-3 bg-red-900/10 border-2 border-red-800/40 rounded flex items-center justify-between relative">
+                                    <div class="flex items-center gap-3">
+                                        <div id="card-hate-icon" class="w-10 h-10 rounded-full bg-red-800 text-white flex items-center justify-center font-bold text-lg shrink-0 p-1 border border-red-300/30">
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] font-bold text-red-700 font-typewriter uppercase flex items-center gap-1">
+                                                <i class="fa-solid fa-ban"></i> NÉMESIS / CLASE MÁS ODIADA
+                                            </div>
+                                            <div id="card-hate-title" class="text-base font-black text-red-900 font-tf2-build uppercase leading-tight">SNIPER</div>
+                                        </div>
+                                    </div>
+                                    <span id="card-hate-reason" class="text-[11px] font-typewriter font-bold text-red-800 max-w-[150px] text-right truncate">Headshots</span>
+                                </div>
+
+                            </div>
+
+                            <!-- RIGHT COLUMN: LOADOUT & DOSSIER NOTES (7 COLS) -->
+                            <div class="col-span-7 flex flex-col justify-between">
+                                
+                                <div class="space-y-4 flex-1 flex flex-col">
+                                    
+                                    <!-- LOADOUT BOX -->
+                                    <div class="p-4 bg-neutral-900/10 border-2 border-neutral-900/20 rounded">
+                                        <div class="text-xs font-bold text-neutral-800 uppercase tracking-widest mb-1.5 font-oswald flex items-center gap-1.5">
+                                            <i class="fa-solid fa-gun text-amber-800"></i> EQUIPAMIENTO DE ARMAS DESTACADO
+                                        </div>
+                                        <p id="card-loadout-display" class="text-sm font-typewriter font-bold text-neutral-900 leading-snug">
+                                            Australium Rocket Launcher, Gunboats, Market Gardener
+                                        </p>
+                                    </div>
+
+                                    <!-- MERCENARY DOSSIER NOTES / QUOTE BOX -->
+                                    <div id="card-quote-box" class="p-5 rounded border-2 border-neutral-900/30 relative flex-1 flex flex-col justify-center" style="background-color: rgba(255, 255, 255, 0.45);">
+                                        <i class="fa-solid fa-quote-left absolute top-3 left-3 text-neutral-900/15 text-3xl"></i>
+                                        <div class="relative z-10 px-4">
+                                            <div class="text-[10px] font-bold text-amber-900 uppercase tracking-widest mb-1 font-typewriter">
+                                                // MANN CO. CONFIDENTIAL EVALUATION & QUOTE
+                                            </div>
+                                            <p id="card-quote-display" class="text-sm md:text-base italic text-neutral-900 font-bold font-typewriter leading-relaxed">
+                                                "Si la violencia no resolvió tu problema, es porque no usaste suficiente violencia."
+                                            </p>
+                                        </div>
+                                        <i class="fa-solid fa-quote-right absolute bottom-3 right-3 text-neutral-900/15 text-3xl"></i>
+                                    </div>
+
+                                </div>
+
+                                <!-- BOTTOM DECORATIVE FOOTER -->
+                                <div class="mt-4 pt-2 border-t border-neutral-900/20 flex justify-between items-center text-[10px] text-neutral-600 font-typewriter">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-block w-2 h-2 rounded-full bg-[#ba383b]"></span>
+                                        <span>PROPERTY OF MANN CO. HEAVY INDUSTRIES &bull; TEUFORT, NM</span>
+                                    </div>
+                                    <div class="tracking-widest uppercase font-bold">VICTORY OR DEATH</div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- FLOATING CUSTOM STICKER / OVERLAY LAYER -->
+                        <div id="card-sticker-layer" class="absolute z-30 cursor-grab active:cursor-grabbing sticker-interactive transition-opacity" style="top: 30%; left: 82%; transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1;">
+                            <img id="card-sticker-img" src="" alt="Sticker" class="max-w-[280px] max-h-[280px] object-contain hidden">
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-[#1c1815] border-t border-neutral-800 py-4 text-center text-xs text-neutral-500 font-typewriter mt-auto">
+        <p>TF2 Mercenary Dossier Generator &bull; Inspirado en el universo de Team Fortress 2 y Mann Co.</p>
+    </footer>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-amber-600 text-neutral-950 px-4 py-2.5 rounded-lg shadow-2xl font-bold text-xs flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4 z-50 font-oswald">
+        <i class="fa-solid fa-circle-check text-base"></i>
+        <span id="toast-msg">Notificación</span>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // Official TF2 Class Emblem Vector SVGs matching class badges
+        const CLASS_ICONS = {
+            'Scout': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M15,62 C15,55 30,52 48,52 C65,52 78,56 86,63 C89,68 86,74 78,74 L24,74 C18,74 15,68 15,62 Z M35,46 C48,22 78,16 78,16 C66,32 50,44 50,44 Z M22,54 C34,36 62,28 62,28 C50,44 34,54 34,54 Z M52,32 C68,18 88,16 88,16 C80,30 65,38 65,38 Z"/></svg>`,
+            'Soldier': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M76,12 C84,20 86,28 78,38 L62,22 C72,14 80,16 76,12 Z M58,26 L32,52 C26,50 18,52 12,62 C18,62 22,66 22,72 L12,88 L28,78 C34,78 38,82 38,88 C48,82 50,74 48,68 L74,42 L58,26 Z"/></svg>`,
+            'Pyro': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M50,10 C50,10 78,38 78,64 C78,80 65,90 50,90 C35,90 22,80 22,64 C22,46 40,30 40,30 C40,30 32,44 32,54 C32,62 40,68 50,68 C60,68 66,62 66,54 C66,38 50,10 50,10 Z M50,38 C56,48 56,58 50,62 C46,65 42,62 42,56 C42,48 50,38 50,38 Z"/></svg>`,
+            'Demoman': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M50,30 A28,28 0 1,0 50,86 A28,28 0 1,0 50,30 Z M42,24 H58 V30 H42 Z M50,24 C50,14 62,20 66,14 C67,12 69,14 68,16 C64,22 54,16 54,24 Z M72,8 L74,14 L80,12 L76,17 L82,20 L76,22 L78,28 L73,24 L70,29 L69,23 L63,22 L68,18 Z"/></svg>`,
+            'Heavy': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M50,8 C46,18 42,28 42,38 V82 H38 V88 H62 V82 H58 V38 C58,28 54,18 50,8 Z M26,24 C23,32 20,40 20,48 V82 H17 V88 H35 V82 H32 V48 C32,40 29,32 26,24 Z M74,24 C71,32 68,40 68,48 V82 H65 V88 H83 V82 H80 V48 C80,40 77,32 74,24 Z"/></svg>`,
+            'Engineer': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M74,14 C64,8 52,14 48,22 L16,54 C10,60 10,72 16,78 C22,84 34,84 40,78 L72,46 C80,42 86,30 80,20 L68,32 L58,22 L74,14 Z M26,74 C22,78 16,78 12,74 C8,70 8,64 12,60 C16,56 22,56 26,60 C30,64 30,70 26,74 Z"/></svg>`,
+            'Medic': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M35,12 H65 V35 H88 V65 H65 V88 H35 V65 H12 V35 H35 Z"/></svg>`,
+            'Sniper': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M50,10 A40,40 0 1,0 50,90 A40,40 0 1,0 50,10 M50,20 A30,30 0 1,1 50,80 A30,30 0 1,1 50,20 M46,6 H54 V26 H46 Z M46,74 H54 V94 H46 Z M6,46 H26 V54 H6 Z M74,46 H94 V54 H74 Z M50,42 A8,8 0 1,0 50,58 A8,8 0 1,0 50,42 Z"/></svg>`,
+            'Spy': `<svg viewBox="0 0 100 100" class="w-6 h-6 fill-current"><path d="M15,60 L18,70 L65,56 L62,46 Z M60,46 C60,32 75,28 72,15 C70,8 80,10 82,16 C75,20 68,34 68,48 Z M55,44 C48,32 55,20 50,10 C46,4 56,6 58,10 C52,14 56,26 62,42 Z"/></svg>`
+        };
+
+        const QUICK_COUNTRIES = [
+            { name: "México", flag: "🇲🇽" },
+            { name: "Argentina", flag: "🇦🇷" },
+            { name: "Chile", flag: "🇨🇱" },
+            { name: "Colombia", flag: "🇨🇴" },
+            { name: "España", flag: "🇪🇸" },
+            { name: "EE.UU.", flag: "🇺🇸" },
+            { name: "Perú", flag: "🇵🇪" },
+            { name: "Venezuela", flag: "🇻🇪" },
+            { name: "Ecuador", flag: "🇪🇨" },
+            { name: "Brasil", flag: "🇧🇷" },
+            { name: "Uruguay", flag: "🇺🇾" }
+        ];
+
+        // State object
+        const state = {
+            team: 'RED', // RED, BLU, MvM
+            gamertag: 'SAXTON_Lover69',
+            avatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80',
+            country: 'México',
+            flag: '🇲🇽',
+            hours: '1,850 hrs',
+            hat: 'Burning Flames Team Captain',
+            loadout: 'Australium Rocket Launcher, Gunboats, Market Gardener',
+            quote: '"Si la violencia no resolvió tu problema, es porque no usaste suficiente violencia."',
+            
+            // Classes
+            mainClass: 'Soldier',
+            mainSub: 'Rocket Jumper God',
+            
+            secClass: 'Demoman',
+            secSub: 'Pipe Master',
+            
+            showTertiary: true,
+            terClass: 'Medic',
+            terSub: 'Kritzkrieg Pop',
+            
+            hateClass: 'Sniper',
+            hateReason: 'Headshots a través de todo el mapa',
+            
+            // Sticker
+            sticker: {
+                src: '',
+                scale: 1,
+                rotate: 0,
+                opacity: 1,
+                posX: 82,
+                posY: 30
+            },
+
+            // Style
+            style: {
+                paperBg: '#efe3c3',
+                paperDark: false,
+                stamp: true,
+                clips: true,
+                titleFont: 'font-tf2-build',
+                titleSize: 1
+            }
+        };
+
+        // DOM elements initialization
+        let playerCard, cardAvatarImg, previewAvatarThumb, cardGamertag, cardCountry, cardFlag, cardHours, cardHat, cardLoadout, cardQuote, cardTeamBadge;
+        let cardMainIcon, cardMainTitle, cardMainSub;
+        let cardSecIcon, cardSecTitle, cardSecSub;
+        let cardTerContainer, cardTerIcon, cardTerTitle, cardTerSub;
+        let cardHateIcon, cardHateTitle, cardHateReason;
+        let cardStickerLayer, cardStickerImg, cardStamp, cardTape1, cardTape2;
+
+        function initDOMElements() {
+            playerCard = document.getElementById('player-card');
+            cardAvatarImg = document.getElementById('card-avatar-img');
+            previewAvatarThumb = document.getElementById('preview-avatar-thumb');
+            cardGamertag = document.getElementById('card-gamertag-display');
+            cardCountry = document.getElementById('card-country-display');
+            cardFlag = document.getElementById('card-flag-display');
+            cardHours = document.getElementById('card-hours-display');
+            cardHat = document.getElementById('card-hat-display');
+            cardLoadout = document.getElementById('card-loadout-display');
+            cardQuote = document.getElementById('card-quote-display');
+            cardTeamBadge = document.getElementById('card-team-badge');
+
+            cardMainIcon = document.getElementById('card-main-icon');
+            cardMainTitle = document.getElementById('card-main-title');
+            cardMainSub = document.getElementById('card-main-sub');
+
+            cardSecIcon = document.getElementById('card-sec-icon');
+            cardSecTitle = document.getElementById('card-sec-title');
+            cardSecSub = document.getElementById('card-sec-sub');
+
+            cardTerContainer = document.getElementById('card-ter-container');
+            cardTerIcon = document.getElementById('card-ter-icon');
+            cardTerTitle = document.getElementById('card-ter-title');
+            cardTerSub = document.getElementById('card-ter-sub');
+
+            cardHateIcon = document.getElementById('card-hate-icon');
+            cardHateTitle = document.getElementById('card-hate-title');
+            cardHateReason = document.getElementById('card-hate-reason');
+
+            cardStickerLayer = document.getElementById('card-sticker-layer');
+            cardStickerImg = document.getElementById('card-sticker-img');
+            cardStamp = document.getElementById('card-stamp');
+            cardTape1 = document.getElementById('card-tape-1');
+            cardTape2 = document.getElementById('card-tape-2');
+        }
+
+        function initInputListeners() {
+            const inputGamertag = document.getElementById('input-gamertag');
+            if (inputGamertag) inputGamertag.addEventListener('input', e => { state.gamertag = e.target.value; renderCard(); });
+
+            const inputCountry = document.getElementById('input-country');
+            if (inputCountry) inputCountry.addEventListener('input', e => { state.country = e.target.value; renderCard(); });
+
+            const inputFlag = document.getElementById('input-flag');
+            if (inputFlag) inputFlag.addEventListener('input', e => { state.flag = e.target.value; renderCard(); });
+
+            const inputHours = document.getElementById('input-hours');
+            if (inputHours) inputHours.addEventListener('input', e => { state.hours = e.target.value; renderCard(); });
+
+            const inputHat = document.getElementById('input-hat');
+            if (inputHat) inputHat.addEventListener('input', e => { state.hat = e.target.value; renderCard(); });
+
+            const inputLoadout = document.getElementById('input-loadout');
+            if (inputLoadout) inputLoadout.addEventListener('input', e => { state.loadout = e.target.value; renderCard(); });
+
+            const inputQuote = document.getElementById('input-quote');
+            if (inputQuote) inputQuote.addEventListener('input', e => { state.quote = e.target.value; renderCard(); });
+
+            // Classes
+            const selectMain = document.getElementById('select-main-class');
+            if (selectMain) selectMain.addEventListener('change', e => { state.mainClass = e.target.value; renderCard(); });
+
+            const inputMainSub = document.getElementById('input-main-sub');
+            if (inputMainSub) inputMainSub.addEventListener('input', e => { state.mainSub = e.target.value; renderCard(); });
+
+            const selectSec = document.getElementById('select-sec-class');
+            if (selectSec) selectSec.addEventListener('change', e => { state.secClass = e.target.value; renderCard(); });
+
+            const inputSecSub = document.getElementById('input-sec-sub');
+            if (inputSecSub) inputSecSub.addEventListener('input', e => { state.secSub = e.target.value; renderCard(); });
+
+            const toggleTertiary = document.getElementById('toggle-tertiary');
+            if (toggleTertiary) toggleTertiary.addEventListener('change', e => { state.showTertiary = e.target.checked; renderCard(); });
+
+            const selectTer = document.getElementById('select-ter-class');
+            if (selectTer) selectTer.addEventListener('change', e => { state.terClass = e.target.value; renderCard(); });
+
+            const inputTerSub = document.getElementById('input-ter-sub');
+            if (inputTerSub) inputTerSub.addEventListener('input', e => { state.terSub = e.target.value; renderCard(); });
+
+            const selectHate = document.getElementById('select-hate-class');
+            if (selectHate) selectHate.addEventListener('change', e => { state.hateClass = e.target.value; renderCard(); });
+
+            const inputHateReason = document.getElementById('input-hate-reason');
+            if (inputHateReason) inputHateReason.addEventListener('input', e => { state.hateReason = e.target.value; renderCard(); });
+        }
+
+        function renderCard() {
+            if (!playerCard) return;
+
+            // Gamertag & info
+            if (cardGamertag) {
+                cardGamertag.textContent = state.gamertag || 'MERCENARY';
+                cardGamertag.style.fontSize = `${2.0 * state.style.titleSize}rem`;
+                cardGamertag.style.lineHeight = '1.1';
+                cardGamertag.className = cardGamertag.className.replace(/font-\S+/g, '');
+                cardGamertag.classList.add(state.style.titleFont);
+            }
+
+            if (cardCountry) cardCountry.textContent = state.country || 'MÉXICO';
+            if (cardFlag) cardFlag.textContent = state.flag || '🇲🇽';
+            if (cardHours) cardHours.textContent = state.hours || '0 hrs';
+            if (cardHat) cardHat.textContent = state.hat || 'None';
+            if (cardLoadout) cardLoadout.textContent = state.loadout || 'Standard Stock';
+            if (cardQuote) cardQuote.textContent = state.quote ? `"${state.quote.replace(/^"|"$/g, '')}"` : '""';
+
+            if (cardAvatarImg && state.avatar) cardAvatarImg.src = state.avatar;
+
+            // Classes rendering with SVG logos
+            if (cardMainTitle) cardMainTitle.textContent = state.mainClass;
+            if (cardMainIcon) cardMainIcon.innerHTML = CLASS_ICONS[state.mainClass] || '';
+            if (cardMainSub) cardMainSub.textContent = state.mainSub;
+
+            if (cardSecTitle) cardSecTitle.textContent = state.secClass;
+            if (cardSecIcon) cardSecIcon.innerHTML = CLASS_ICONS[state.secClass] || '';
+            if (cardSecSub) cardSecSub.textContent = state.secSub;
+
+            if (cardTerContainer) cardTerContainer.style.display = state.showTertiary ? 'flex' : 'none';
+            if (cardTerTitle) cardTerTitle.textContent = state.terClass;
+            if (cardTerIcon) cardTerIcon.innerHTML = CLASS_ICONS[state.terClass] || '';
+            if (cardTerSub) cardTerSub.textContent = state.terSub;
+
+            if (cardHateTitle) cardHateTitle.textContent = state.hateClass;
+            if (cardHateIcon) cardHateIcon.innerHTML = CLASS_ICONS[state.hateClass] || '';
+            if (cardHateReason) cardHateReason.textContent = state.hateReason;
+
+            // Team Colors
+            if (state.team === 'RED') {
+                if (cardTeamBadge) {
+                    cardTeamBadge.textContent = 'RED TEAM MERCENARY';
+                    cardTeamBadge.style.backgroundColor = '#ba383b';
+                }
+                playerCard.style.borderColor = '#8a2629';
+                if (cardMainIcon) cardMainIcon.style.backgroundColor = '#ba383b';
+            } else if (state.team === 'BLU') {
+                if (cardTeamBadge) {
+                    cardTeamBadge.textContent = 'BLU TEAM MERCENARY';
+                    cardTeamBadge.style.backgroundColor = '#5b7a8c';
+                }
+                playerCard.style.borderColor = '#3a5260';
+                if (cardMainIcon) cardMainIcon.style.backgroundColor = '#5b7a8c';
+            } else {
+                if (cardTeamBadge) {
+                    cardTeamBadge.textContent = 'MvM ROBOT HUNTER';
+                    cardTeamBadge.style.backgroundColor = '#4b6154';
+                }
+                playerCard.style.borderColor = '#304238';
+                if (cardMainIcon) cardMainIcon.style.backgroundColor = '#4b6154';
+            }
+
+            // Paper Style
+            playerCard.style.backgroundColor = state.style.paperBg;
+            if (state.style.paperDark) {
+                playerCard.style.color = '#efe3c3';
+            } else {
+                playerCard.style.color = '#2b2522';
+            }
+
+            // Stamp & Tape toggles
+            if (cardStamp) cardStamp.style.display = state.style.stamp ? 'block' : 'none';
+            if (cardTape1) cardTape1.style.display = state.style.clips ? 'block' : 'none';
+            if (cardTape2) cardTape2.style.display = state.style.clips ? 'block' : 'none';
+
+            renderSticker();
+        }
+
+        function renderSticker() {
+            if (!cardStickerImg || !cardStickerLayer) return;
+            if (state.sticker.src) {
+                cardStickerImg.src = state.sticker.src;
+                cardStickerImg.classList.remove('hidden');
+                cardStickerLayer.style.left = `${state.sticker.posX}%`;
+                cardStickerLayer.style.top = `${state.sticker.posY}%`;
+                cardStickerLayer.style.transform = `translate(-50%, -50%) scale(${state.sticker.scale}) rotate(${state.sticker.rotate}deg)`;
+                cardStickerLayer.style.opacity = state.sticker.opacity;
+            } else {
+                cardStickerImg.classList.add('hidden');
+                cardStickerImg.src = '';
+            }
+        }
+
+        // Quick country list generator
+        function initQuickCountries() {
+            const container = document.getElementById('quick-country-list');
+            if (!container) return;
+            container.innerHTML = '';
+            QUICK_COUNTRIES.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = "px-2 py-0.5 text-[11px] bg-neutral-900 hover:bg-amber-600 hover:text-black text-gray-300 rounded border border-neutral-700 transition flex items-center gap-1";
+                btn.innerHTML = `<span>${item.flag}</span> <span>${item.name}</span>`;
+                btn.addEventListener('click', () => {
+                    state.country = item.name;
+                    state.flag = item.flag;
+                    const cInp = document.getElementById('input-country');
+                    const fInp = document.getElementById('input-flag');
+                    if (cInp) cInp.value = item.name;
+                    if (fInp) fInp.value = item.flag;
+                    renderCard();
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        // Team Switchers
+        function setupTeamSwitchers() {
+            const redBtn = document.getElementById('team-red-btn');
+            const bluBtn = document.getElementById('team-blu-btn');
+            const mvmBtn = document.getElementById('team-mvm-btn');
+
+            const headerLogoBg = document.getElementById('header-logo-bg');
+            const mainHeader = document.getElementById('main-header');
+
+            const setTeam = (teamName) => {
+                state.team = teamName;
+                if (teamName === 'RED') {
+                    if (redBtn) redBtn.className = "px-3 py-1 rounded bg-[#ba383b] text-white flex items-center gap-1 shadow";
+                    if (bluBtn) bluBtn.className = "px-3 py-1 rounded text-gray-400 hover:text-white transition flex items-center gap-1";
+                    if (mvmBtn) mvmBtn.className = "px-3 py-1 rounded text-gray-400 hover:text-white transition flex items-center gap-1";
+                    if (headerLogoBg) headerLogoBg.style.backgroundColor = '#ba383b';
+                    if (mainHeader) mainHeader.style.borderColor = '#ba383b';
+                } else if (teamName === 'BLU') {
+                    if (redBtn) redBtn.className = "px-3 py-1 rounded text-gray-400 hover:text-white transition flex items-center gap-1";
+                    if (bluBtn) bluBtn.className = "px-3 py-1 rounded bg-[#5b7a8c] text-white flex items-center gap-1 shadow";
+                    if (mvmBtn) mvmBtn.className = "px-3 py-1 rounded text-gray-400 hover:text-white transition flex items-center gap-1";
+                    if (headerLogoBg) headerLogoBg.style.backgroundColor = '#5b7a8c';
+                    if (mainHeader) mainHeader.style.borderColor = '#5b7a8c';
+                } else {
+                    if (redBtn) redBtn.className = "px-3 py-1 rounded text-gray-400 hover:text-white transition flex items-center gap-1";
+                    if (bluBtn) bluBtn.className = "px-3 py-1 rounded text-gray-400 hover:text-white transition flex items-center gap-1";
+                    if (mvmBtn) mvmBtn.className = "px-3 py-1 rounded bg-[#4b6154] text-white flex items-center gap-1 shadow";
+                    if (headerLogoBg) headerLogoBg.style.backgroundColor = '#4b6154';
+                    if (mainHeader) mainHeader.style.borderColor = '#4b6154';
+                }
+                renderCard();
+                showToast(`Equipo cambiado a ${teamName}`);
+            };
+
+            if (redBtn) redBtn.addEventListener('click', () => setTeam('RED'));
+            if (bluBtn) bluBtn.addEventListener('click', () => setTeam('BLU'));
+            if (mvmBtn) mvmBtn.addEventListener('click', () => setTeam('MvM'));
+
+            const styleRed = document.getElementById('style-preset-red');
+            const styleBlu = document.getElementById('style-preset-blu');
+            const styleMvm = document.getElementById('style-preset-mvm');
+            if (styleRed) styleRed.addEventListener('click', () => setTeam('RED'));
+            if (styleBlu) styleBlu.addEventListener('click', () => setTeam('BLU'));
+            if (styleMvm) styleMvm.addEventListener('click', () => setTeam('MvM'));
+        }
+
+        // Avatar file upload
+        function setupAvatarUpload() {
+            const avatarFileInput = document.getElementById('input-avatar-file');
+            if (avatarFileInput) {
+                avatarFileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        state.avatar = event.target.result;
+                        if (previewAvatarThumb) previewAvatarThumb.src = state.avatar;
+                        renderCard();
+                        showToast("Fotografía del sujeto actualizada");
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const removeAvatarBtn = document.getElementById('remove-avatar-btn');
+            if (removeAvatarBtn) {
+                removeAvatarBtn.addEventListener('click', () => {
+                    state.avatar = "";
+                    renderCard();
+                    showToast("Fotografía eliminada");
+                });
+            }
+        }
+
+        // Sticker controls & Dragging
+        function setupStickerControls() {
+            const stickerFileInput = document.getElementById('sticker-file-input');
+            const dropZone = document.getElementById('drop-zone');
+
+            if (dropZone && stickerFileInput) {
+                dropZone.addEventListener('click', () => stickerFileInput.click());
+                stickerFileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            state.sticker.src = ev.target.result;
+                            renderCard();
+                            showToast("Sticker añadido al expediente");
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            const sliderScale = document.getElementById('slider-scale');
+            if (sliderScale) sliderScale.addEventListener('input', e => {
+                state.sticker.scale = e.target.value / 100;
+                document.getElementById('val-scale').textContent = `${e.target.value}%`;
+                renderCard();
+            });
+
+            const sliderRotate = document.getElementById('slider-rotate');
+            if (sliderRotate) sliderRotate.addEventListener('input', e => {
+                state.sticker.rotate = e.target.value;
+                document.getElementById('val-rotate').textContent = `${e.target.value}°`;
+                renderCard();
+            });
+
+            const sliderOpacity = document.getElementById('slider-opacity');
+            if (sliderOpacity) sliderOpacity.addEventListener('input', e => {
+                state.sticker.opacity = e.target.value / 100;
+                document.getElementById('val-opacity').textContent = `${e.target.value}%`;
+                renderCard();
+            });
+
+            const sliderPosx = document.getElementById('slider-posx');
+            if (sliderPosx) sliderPosx.addEventListener('input', e => {
+                state.sticker.posX = e.target.value;
+                renderCard();
+            });
+
+            const sliderPosy = document.getElementById('slider-posy');
+            if (sliderPosy) sliderPosy.addEventListener('input', e => {
+                state.sticker.posY = e.target.value;
+                renderCard();
+            });
+
+            const removeStickerBtn = document.getElementById('remove-sticker-btn');
+            if (removeStickerBtn) removeStickerBtn.addEventListener('click', () => {
+                state.sticker.src = "";
+                renderCard();
+                showToast("Sticker eliminado");
+            });
+
+            // Draggable logic
+            let isDragging = false;
+            if (cardStickerLayer) {
+                cardStickerLayer.addEventListener('mousedown', startDrag);
+                cardStickerLayer.addEventListener('touchstart', startDrag, {passive: true});
+            }
+
+            function startDrag(e) {
+                if (!state.sticker.src) return;
+                isDragging = true;
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('touchmove', onDrag, {passive: false});
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+            }
+
+            function onDrag(e) {
+                if (!isDragging || !playerCard) return;
+                const rect = playerCard.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                let x = ((clientX - rect.left) / rect.width) * 100;
+                let y = ((clientY - rect.top) / rect.height) * 100;
+
+                x = Math.max(0, Math.min(100, x));
+                y = Math.max(0, Math.min(100, y));
+
+                state.sticker.posX = Math.round(x);
+                state.sticker.posY = Math.round(y);
+
+                const sX = document.getElementById('slider-posx');
+                const sY = document.getElementById('slider-posy');
+                if (sX) sX.value = state.sticker.posX;
+                if (sY) sY.value = state.sticker.posY;
+
+                renderCard();
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('touchmove', onDrag);
+            }
+        }
+
+        // Style controls (Paper, Fonts, Stamps)
+        function setupStyleControls() {
+            const pClassic = document.getElementById('paper-theme-classic');
+            const pAged = document.getElementById('paper-theme-aged');
+            const pDark = document.getElementById('paper-theme-dark');
+
+            if (pClassic) pClassic.addEventListener('click', () => { state.style.paperBg = '#efe3c3'; state.style.paperDark = false; renderCard(); });
+            if (pAged) pAged.addEventListener('click', () => { state.style.paperBg = '#d6c29a'; state.style.paperDark = false; renderCard(); });
+            if (pDark) pDark.addEventListener('click', () => { state.style.paperBg = '#2d2824'; state.style.paperDark = true; renderCard(); });
+
+            const toggleStamp = document.getElementById('toggle-stamp');
+            if (toggleStamp) toggleStamp.addEventListener('change', e => { state.style.stamp = e.target.checked; renderCard(); });
+
+            const toggleClips = document.getElementById('toggle-clips');
+            if (toggleClips) toggleClips.addEventListener('change', e => { state.style.clips = e.target.checked; renderCard(); });
+
+            const selectFont = document.getElementById('select-font');
+            if (selectFont) selectFont.addEventListener('change', e => { state.style.titleFont = e.target.value; renderCard(); });
+
+            const sliderTitleSize = document.getElementById('slider-title-size');
+            if (sliderTitleSize) sliderTitleSize.addEventListener('input', e => {
+                state.style.titleSize = e.target.value / 100;
+                document.getElementById('val-title-size').textContent = `${e.target.value}%`;
+                renderCard();
+            });
+        }
+
+        // Tabs setup
+        function setupTabs() {
+            document.querySelectorAll('#tab-nav .tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#tab-nav .tab-btn').forEach(b => {
+                        b.classList.remove('active', 'text-amber-400', 'bg-neutral-800', 'shadow');
+                        b.classList.add('text-gray-400');
+                    });
+                    btn.classList.add('active', 'text-amber-400', 'bg-neutral-800', 'shadow');
+                    btn.classList.remove('text-gray-400');
+
+                    const targetTab = btn.getAttribute('data-tab');
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+                    const tabEl = document.getElementById(targetTab);
+                    if (tabEl) tabEl.classList.remove('hidden');
+                });
+            });
+        }
+
+        // Export PNG functionality
+        function setupExport() {
+            const downloadBtn = document.getElementById('download-btn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', async () => {
+                    showToast("Generando expediente PNG en alta resolución (1280x720)...", "fa-spinner fa-spin");
+
+                    try {
+                        await document.fonts.ready;
+                        
+                        // Guardar la transformación CSS de la vista previa
+                        const savedTransform = playerCard.style.transform;
+                        const savedTransformOrigin = playerCard.style.transformOrigin;
+
+                        // Desactivar temporalmente la escala CSS para capturar a tamaño real (1280x720)
+                        playerCard.style.transform = 'none';
+                        playerCard.style.transformOrigin = 'top left';
+
+                        // Forzar redibujado síncrono en el DOM
+                        void playerCard.offsetHeight;
+
+                        const canvas = await html2canvas(playerCard, {
+                            width: 1280,
+                            height: 720,
+                            scale: 1,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: state.style.paperBg,
+                            logging: false,
+                            scrollX: 0,
+                            scrollY: 0,
+                            windowWidth: 1280,
+                            windowHeight: 720
+                        });
+
+                        // Restaurar el escalado de la vista previa
+                        playerCard.style.transform = savedTransform;
+                        playerCard.style.transformOrigin = savedTransformOrigin;
+
+                        const image = canvas.toDataURL("image/png");
+                        const link = document.createElement('a');
+                        link.download = `TF2_Mercenary_${(state.gamertag || 'MERC').replace(/\s+/g, '_')}.png`;
+                        link.href = image;
+                        link.click();
+
+                        showToast("¡Expediente descargado en 1280x720!");
+                    } catch (err) {
+                        resizePreviewCard();
+                        console.error(err);
+                        showToast("Error al generar la imagen", "fa-triangle-exclamation");
+                    }
+                });
+            }
+
+            const resetBtn = document.getElementById('reset-btn');
+            if (resetBtn) resetBtn.addEventListener('click', () => {
+                location.reload();
+            });
+        }
+
+        function showToast(message, icon = "fa-circle-check") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            if (!toast || !toastMsg) return;
+
+            toastMsg.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> ${message}`;
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+            }, 3000);
+        }
+
+        function resizePreviewCard() {
+            const holder = document.getElementById('card-scale-holder');
+            if (!holder || !playerCard) return;
+            const containerWidth = holder.offsetWidth;
+            const targetWidth = 1280;
+
+            if (containerWidth < targetWidth) {
+                const scale = containerWidth / targetWidth;
+                playerCard.style.transform = `scale(${scale})`;
+                playerCard.style.transformOrigin = 'center center';
+            } else {
+                playerCard.style.transform = 'scale(1)';
+            }
+        }
+
+        window.addEventListener('resize', resizePreviewCard);
+
+        // INITIALIZATION
+        window.onload = () => {
+            initDOMElements();
+            initInputListeners();
+            initQuickCountries();
+            setupTeamSwitchers();
+            setupAvatarUpload();
+            setupStickerControls();
+            setupStyleControls();
+            setupTabs();
+            setupExport();
+            
+            renderCard();
+            resizePreviewCard();
+        };
+    </script>
+</body>
+</html>
